@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sainsbury's Barcode Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/styles/main.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="nav-brand">dbd9</a>
+        <div class="nav-links">
+            <a href="/" class="nav-link">Home</a>
+            <a href="/sains-gen" class="nav-link">Sainsbury's</a>
+            <a href="/waitrose-gen" class="nav-link">Waitrose</a>
+            <a href="/morrisons-gen" class="nav-link">Morrisons</a>
+            <a href="/ms-gen" class="nav-link">M&S</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <h1 class="title">Sainsbury's Barcode Generator</h1>
+        
+        <div class="form-container">
+            <div class="form-group">
+                <label for="originalBarcode" class="form-label">Original Barcode:</label>
+                <input type="text" id="originalBarcode" class="form-input" placeholder="e.g., 5099802150117">
+                <p id="originalError" class="form-error"></p>
+            </div>
+            
+            <div class="form-group">
+                <label for="customCode" class="form-label">Custom Code:</label>
+                <input type="text" id="customCode" class="form-input" placeholder="Enter any length of code">
+                <p id="customError" class="form-error"></p>
+            </div>
+            
+            <button id="generateButton" class="button button-primary">Generate Barcode</button>
+        </div>
+        
+        <div id="resultContainer" class="result-container">
+            <p>Reduced Barcode:</p>
+            <div id="barcodeText" class="barcode-text"></div>
+            <img id="barcodeImage" class="barcode-image" alt="Barcode">
+        </div>
+    </main>
+
+    <footer class="social-footer">
+        <div class="social-links">
+            <a href="https://discord.gg/ZD9ekqCP9n" target="_blank" class="social-link">
+                <i class="fab fa-discord"></i>
+            </a>
+            <a href="https://t.me/cllcdz" target="_blank" class="social-link">
+                <i class="fab fa-telegram"></i>
+            </a>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const originalBarcode = document.getElementById('originalBarcode');
+            const customCode = document.getElementById('customCode');
+            const generateButton = document.getElementById('generateButton');
+            const resultContainer = document.getElementById('resultContainer');
+            const barcodeText = document.getElementById('barcodeText');
+            const barcodeImage = document.getElementById('barcodeImage');
+            
+            // Generate barcode
+            generateButton.addEventListener('click', function() {
+                const original = originalBarcode.value.trim();
+                const custom = customCode.value.trim();
+                let hasError = false;
+                
+                // Validate inputs
+                if (!/^\d+$/.test(original)) {
+                    document.getElementById('originalError').textContent = 'Please enter a valid numeric barcode';
+                    hasError = true;
+                } else {
+                    document.getElementById('originalError').textContent = '';
+                }
+                
+                if (!/^\d+$/.test(custom)) {
+                    document.getElementById('customError').textContent = 'Please enter a valid numeric code';
+                    hasError = true;
+                } else {
+                    document.getElementById('customError').textContent = '';
+                }
+                
+                if (hasError) return;
+                
+                // Send request to server
+                fetch('/api/sains-gen', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ originalBarcode: original, customCode: custom })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    
+                    // Display result
+                    barcodeText.textContent = data.barcode;
+                    barcodeImage.src = data.barcodeImage;
+                    resultContainer.style.display = 'flex';
+                })
+                .catch(error => {
+                    console.error('Generation error:', error);
+                    alert('Error generating barcode: ' + error.message);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
